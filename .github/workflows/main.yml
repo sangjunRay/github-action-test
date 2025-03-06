@@ -15,7 +15,7 @@ jobs:
         id: check-artifact
         run: |
           # Check if the artifact file exists
-          if ! curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          if ! curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
           "https://api.github.com/repos/${{ github.repository }}/actions/artifacts" | jq -e ".artifacts | map(select(.name == \"pr-info-${{ github.event.inputs.run_id }}\")) | length > 0"; then
             echo "Artifact not found for run_id: ${{ github.event.inputs.run_id }}. Skipping deploy."
             exit 0  # Exit gracefully if artifact doesn't exist
