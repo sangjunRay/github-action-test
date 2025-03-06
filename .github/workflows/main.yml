@@ -1,14 +1,51 @@
-name: Manual Workflow
+name: Deploy (Manual)
 
 on:
   workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID to retrieve PR information'
+        required: true
 
 jobs:
-  run-manual-job:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Check if PR Info Artifact exists
+        id: check-artifact
+        run: |
+          # Check if the artifact file exists
+          if ! curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/artifacts" | jq -e ".artifacts | map(select(.name == \"pr-info-${{ github.event.inputs.run_id }}\")) | length > 0"; then
+            echo "Artifact not found for run_id: ${{ github.event.inputs.run_id }}. Skipping deploy."
+            exit 0  # Exit gracefully if artifact doesn't exist
+          else
+            echo "Artifact found for run_id: ${{ github.event.inputs.run_id }}. Proceeding with deploy."
+          fi
 
-      - name: Run a script
-        run: echo "Hello, this is a manually triggered workflow!"
+      - name: Download PR Info Artifact by Run ID
+        if: steps.check-artifact.outputs.exists == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-info-${{ github.event.inputs.run_id }}
+
+      - name: Read PR Info from Artifact
+        if: steps.check-artifact.outputs.exists == 'true'
+        id: read-pr
+        run: |
+          PR_TITLE=$(jq -r '.title' pr-info.json)
+          PR_BODY=$(jq -r '.body' pr-info.json)
+          PR_AUTHOR=$(jq -r '.author' pr-info.json)
+          PR_RUN_ID=$(jq -r '.run_id' pr-info.json)
+          echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+          echo "PR_BODY=$PR_BODY" >> $GITHUB_ENV
+          echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
+          echo "PR_RUN_ID=$PR_RUN_ID" >> $GITHUB_ENV
+
+      - name: Deploy with PR Info
+        if: steps.check-artifact.outputs.exists == 'true'
+        run: |
+          echo "Deploying for PR: $PR_TITLE"
+          echo "PR Body: $PR_BODY"
+          echo "Author: $PR_AUTHOR"
+          echo "Related Run ID: $PR_RUN_ID"

@@ -1,0 +1,21 @@
+name: Save PR Info with Run ID
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  save-pr-info:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Save PR Info and Run ID
+        run: |
+          echo '{"title": "${{ github.event.pull_request.title }}", "body": "${{ github.event.pull_request.body }}", "author": "${{ github.event.pull_request.user.login }}", "run_id": "${{ github.run_id }}"}' > pr-info.json
+
+      - name: Upload PR Info Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-info-${{ github.run_id }}
+          path: pr-info.json
