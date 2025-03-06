@@ -10,43 +10,50 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
+      # Step 1: Check if the Artifact exists
       - name: Check if PR Info Artifact exists
         id: check-artifact
         run: |
-          # Check if the artifact file exists
-          if curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts" | jq -e ".artifacts | map(select(.name == \"pr-info-${{ github.event.inputs.run_id }}\")) | length > 0"; then
-            echo "Artifact found for run_id: ${{ github.event.inputs.run_id }}. Proceeding with deploy."
-            echo "exists=true" >> $GITHUB_ENV
+          # Check if the artifact exists by calling GitHub API
+          artifact_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts" | \
+            jq -r ".artifacts[] | select(.name == \"pr-info-${{ github.event.inputs.run_id }}\") | .id")
+
+          # Save the artifact ID if exists
+          if [ -n "$artifact_id" ]; then
+            echo "Artifact found."
+            echo "artifact_id=$artifact_id" >> $GITHUB_ENV
           else
-            echo "Artifact not found for run_id: ${{ github.event.inputs.run_id }}. Skipping deploy."
-            echo "exists=false" >> $GITHUB_ENV
+            echo "Artifact not found."
+            exit 1
           fi
 
-      - name: Download PR Info Artifact by Run ID
-        if: env.exists == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: pr-info-${{ github.event.inputs.run_id }}
-
-      - name: Read PR Info from Artifact
-        if: env.exists == 'true'
-        id: read-pr
+      # Step 2: Download the Artifact if it exists
+      - name: Download PR Info Artifact
+        if: env.artifact_id != ''
         run: |
-          PR_TITLE=$(jq -r '.title' pr-info.json)
-          PR_BODY=$(jq -r '.body' pr-info.json)
-          PR_AUTHOR=$(jq -r '.author' pr-info.json)
-          PR_RUN_ID=$(jq -r '.run_id' pr-info.json)
-          echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
-          echo "PR_BODY=$PR_BODY" >> $GITHUB_ENV
-          echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
-          echo "PR_RUN_ID=$PR_RUN_ID" >> $GITHUB_ENV
+          echo "Downloading artifact..."
+          curl -L -o pr-info-${{ github.event.inputs.run_id }}.zip -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ env.artifact_id }}/zip"
 
+      # Step 3: Unzip the downloaded artifact
+      - name: Extract Artifact
+        if: env.artifact_id != ''
+        run: |
+          echo "Extracting artifact..."
+          unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact
+
+      # Step 4: Proceed with deployment using PR information
       - name: Deploy with PR Info
-        if: env.exists == 'true'
+        if: env.artifact_id != ''
         run: |
+          # Extract data from the extracted artifact (e.g., pr-info.json)
+          PR_TITLE=$(jq -r '.title' ./artifact/pr-info.json)
+          PR_BODY=$(jq -r '.body' ./artifact/pr-info.json)
+          PR_AUTHOR=$(jq -r '.author' ./artifact/pr-info.json)
+
           echo "Deploying for PR: $PR_TITLE"
           echo "PR Body: $PR_BODY"
           echo "Author: $PR_AUTHOR"
-          echo "Related Run ID: $PR_RUN_ID"
