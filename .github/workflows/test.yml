@@ -9,7 +9,12 @@ jobs:
   save-pr-info:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+
     steps:
+      - name: Save PR Body to a text file
+        run: |
+          echo "${{ github.event.pull_request.body }}" > pr-body.txt
+
       - name: Save PR Info and Run ID
         run: |
           echo '{"title": "${{ github.event.pull_request.title }}", "body": "${{ github.event.pull_request.body }}", "author": "${{ github.event.pull_request.user.login }}", "run_id": "${{ github.run_id }}"}' > pr-info.json
@@ -20,17 +25,8 @@ jobs:
           name: pr-info-${{ github.run_id }}
           path: pr-info.json
 
-
-      - name: ⚙️ PR 기반 릴리즈 노트 생성
-        uses: softprops/action-gh-release@v2
+      - name: Upload PR Body Artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: release-${{ github.run_id }}
-          name: Release - ${{ github.run_id }}
-          body: |
-            # 🔥 릴리즈 노트
-            ## ${{github.event.pull_request.title  }}
-
-            ${{ github.event.pull_request.body }}
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GH_TOKEN }}
+          name: pr-body-${{ github.run_id }}
+          path: pr-body.txt
