@@ -19,3 +19,18 @@ jobs:
         with:
           name: pr-info-${{ github.run_id }}
           path: pr-info.json
+
+
+      - name: ⚙️ PR 기반 릴리즈 노트 생성
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test-${{ github.event.inputs.run_id }}
+          name: test - ${{ github.event.inputs.run_id }}
+          body: |
+            # 🔥 릴리즈 노트
+            ## ${{github.event.pull_request.title  }}
+
+            ${{ github.event.pull_request.body }}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GH_TOKEN }}
