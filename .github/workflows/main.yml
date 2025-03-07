@@ -74,5 +74,4 @@ jobs:
             ${{ env.PR_BODY }}
           draft: false
           prerelease: false
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
