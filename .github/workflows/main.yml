@@ -43,7 +43,13 @@ jobs:
         run: |
           echo "Downloading artifact..."
           curl -L -o pr-body-${{ github.event.inputs.run_id }}.zip -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ env.artifact_id }}/zip"     
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ env.artifact_id }}/zip"
+
+      - name: Extract Artifact
+        if: env.artifact_id != ''
+        run: |
+          echo "Extracting artifact..."
+          unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact    
 
       - name: Clean JSON file
         run: |
