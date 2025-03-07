@@ -48,8 +48,10 @@ jobs:
       - name: Clean JSON file
         run: |
           tr -d '\000-\031' < ./artifact/pr-info.json > cleaned.json
-
-      - name: Read PR Info from Cleaned JSON
+          cat cleaned.json    
+        
+        
+         - name: Read PR Info from Cleaned JSON
         run: |
           PR_TITLE=$(jq -r '.title' cleaned.json)
           echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
