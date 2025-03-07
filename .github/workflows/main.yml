@@ -38,42 +38,28 @@ jobs:
           curl -L -o pr-info-${{ github.event.inputs.run_id }}.zip -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ env.artifact_id }}/zip"
 
-      - name: Download PR Info Artifact
-        if: env.artifact_id != ''
-        run: |
-          echo "Downloading artifact..."
-          curl -L -o pr-body-${{ github.event.inputs.run_id }}.zip -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ env.artifact_id }}/zip"
-
+      # Step 3: Extract Artifact
       - name: Extract Artifact
         if: env.artifact_id != ''
         run: |
           echo "Extracting artifact..."
           unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact
-          
-          echo "Extracting artifact..."
-          unzip pr-body-${{ github.event.inputs.run_id }}.zip -d ./artifact
-          
 
-      - name: Clean JSON file
+      # Step 4: Read PR Title from the text file
+      - name: Read PR Title from Artifact
         run: |
-          tr -d '\000-\031' < ./artifact/pr-info.json > cleaned.json
-          cat cleaned.json    
-        
-
-      - name: Read PR Info from Cleaned JSON
-        run: |
-          PR_TITLE=$(jq -r '.title' cleaned.json)
+          PR_TITLE=$(cat ./artifact/pr-title.txt)
           echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
 
+      # Step 5: Read PR Body from the text file
       - name: Read PR Body from Artifact
         run: |
-            PR_BODY=$(cat ./artifact/pr-body.txt)
-            echo "PR_BODY<<EOF" >> $GITHUB_ENV
-            echo "$PR_BODY" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV      
+          PR_BODY=$(cat ./artifact/pr-body.txt)
+          echo "PR_BODY<<EOF" >> $GITHUB_ENV
+          echo "$PR_BODY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
-
+      # Step 6: ⚙️ Generate Release Notes based on PR info
       - name: ⚙️ PR 기반 릴리즈 노트 생성
         uses: softprops/action-gh-release@v2
         with:
