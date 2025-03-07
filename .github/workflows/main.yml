@@ -48,14 +48,15 @@ jobs:
 
       - name: Read PR Info from JSON
         run: |
-            PR_TITLE=$(jq -r '.title | gsub("[\\u0000-\\u001F]"; "")' ./artifact/pr-info.json)
-            PR_BODY=$(jq -r '.body | gsub("[\\u0000-\\u001F]"; "")' ./artifact/pr-info.json)
-            PR_AUTHOR=$(jq -r '.author' ./artifact/pr-info.json)
+            PR_TITLE=$(jq -r '.title') ./artifact/pr-info.json)
             echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+
+      - name: Read PR Body from Artifact
+        run: |
+            PR_BODY=$(cat ./artifact/pr-body-${{ github.event.inputs.run_id }}.txt)
             echo "PR_BODY<<EOF" >> $GITHUB_ENV
             echo "$PR_BODY" >> $GITHUB_ENV
-            echo "EOF" >> $GITHUB_ENV
-            echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV      
 
 
       - name: ⚙️ PR 기반 릴리즈 노트 생성
