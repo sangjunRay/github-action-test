@@ -49,7 +49,11 @@ jobs:
         if: env.artifact_id != ''
         run: |
           echo "Extracting artifact..."
-          unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact    
+          unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact
+          
+          echo "Extracting artifact..."
+          unzip pr-body-${{ github.event.inputs.run_id }}.zip -d ./artifact
+          
 
       - name: Clean JSON file
         run: |
