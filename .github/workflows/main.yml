@@ -46,15 +46,16 @@ jobs:
           unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact
 
 
-      - name: 🔍 PR 타이틀, 바디, 커밋메시지 확인
-        id: pr_info_check
+      - name: Read PR Info from JSON
         run: |
-          PR_TITLE=$(jq -r '.title' ./artifact/pr-info.json')
-          echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
-          
-          echo "PR_BODY<<EOF" >> $GITHUB_ENV
-          PR_BODY=$(jq -r '.body | gsub("[\u0000-\u001F]"; "")' ./artifact/pr-info.json) >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV    
+            PR_TITLE=$(jq -r '.title' ./artifact/pr-info.json)
+            PR_BODY=$(jq -r '.body | gsub("[\u0000-\u001F]"; "")' ./artifact/pr-info.json)
+            PR_AUTHOR=$(jq -r '.author' ./artifact/pr-info.json)
+            echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+            echo "PR_BODY<<EOF" >> $GITHUB_ENV
+            echo "$PR_BODY" >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
 
 
       - name: ⚙️ PR 기반 릴리즈 노트 생성
