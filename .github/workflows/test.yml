@@ -14,19 +14,13 @@ jobs:
       - name: Save PR Body to a text file
         run: |
           echo "${{ github.event.pull_request.body }}" > pr-body.txt
+          echo "${{ github.event.pull_request.title }}" > pr-title.txt
 
-      - name: Save PR Info and Run ID
-        run: |
-          echo '{"title": "${{ github.event.pull_request.title }}", "body": "${{ github.event.pull_request.body }}", "author": "${{ github.event.pull_request.user.login }}", "run_id": "${{ github.run_id }}"}' > pr-info.json
 
       - name: Upload PR Info Artifact
         uses: actions/upload-artifact@v4
         with:
           name: pr-info-${{ github.run_id }}
-          path: pr-info.json
-
-      - name: Upload PR Body Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr-body-${{ github.run_id }}
-          path: pr-body.txt
+          path: | 
+            pr-title.txt
+            pr-body.txt
