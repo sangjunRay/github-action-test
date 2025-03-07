@@ -45,23 +45,17 @@ jobs:
           echo "Extracting artifact..."
           unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact
 
-      - name: Clean JSON file
+
+      - name: 🔍 PR 타이틀, 바디, 커밋메시지 확인
+        id: pr_info_check
         run: |
-            jq 'del(.body | select(type == "string" and test("[\\x00-\\x1F]"))) | .body = (.body | gsub("[\\x00-\\x1F]+"; ""))' ./artifact/pr-info.json > cleaned.json
-            cat cleaned.json    
-
-
-      - name: Read PR Info from Cleaned JSON
-        run: |
-          PR_TITLE=$(jq -r '.title' cleaned.json)
-          PR_BODY=$(jq -r '.body' cleaned.json | sed 's/\r//g')
-          PR_AUTHOR=$(jq -r '.author' cleaned.json)
-
+          PR_TITLE=$(jq -r '.title' ./artifact/pr-info.json')
           echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+          
           echo "PR_BODY<<EOF" >> $GITHUB_ENV
-          echo "$PR_BODY" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
+          PR_BODY=$(jq -r '.body | gsub("[\u0000-\u001F]"; "")' ./artifact/pr-info.json) >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV    
+
 
       - name: ⚙️ PR 기반 릴리즈 노트 생성
         uses: softprops/action-gh-release@v2
