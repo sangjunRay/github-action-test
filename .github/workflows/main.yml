@@ -45,22 +45,18 @@ jobs:
           curl -L -o pr-body-${{ github.event.inputs.run_id }}.zip -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/${{ env.artifact_id }}/zip"     
 
-      # Step 3: Unzip the downloaded artifact
-      - name: Extract Artifact
-        if: env.artifact_id != ''
+      - name: Clean JSON file
         run: |
-          echo "Extracting artifact..."
-          unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact
+          tr -d '\000-\031' < ./artifact/pr-info.json > cleaned.json
 
-
-      - name: Read PR Info from JSON
+      - name: Read PR Info from Cleaned JSON
         run: |
-            PR_TITLE=$(jq -r '.title' ./artifact/pr-info.json)
-            echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+          PR_TITLE=$(jq -r '.title' cleaned.json)
+          echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
 
       - name: Read PR Body from Artifact
         run: |
-            PR_BODY=$(cat ./artifact/pr-body-${{ github.event.inputs.run_id }}.txt)
+            PR_BODY=$(cat ./artifact/pr-body.txt)
             echo "PR_BODY<<EOF" >> $GITHUB_ENV
             echo "$PR_BODY" >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV      
