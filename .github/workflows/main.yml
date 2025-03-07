@@ -52,15 +52,14 @@ jobs:
 
       - name: Read PR Info from Cleaned JSON
         run: |
-          PR_TITLE=$(jq -r '.title' cleaned.json)
-          PR_BODY=$(jq -r '.body' cleaned.json)
-          PR_AUTHOR=$(jq -r '.author' cleaned.json)
-          
-          echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
-          echo "PR_BODY<<EOF" >> $GITHUB_ENV
-          echo "$PR_BODY" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
+            PR_TITLE=$(jq -r '.title' cleaned.json)
+            PR_BODY=$(jq -r '.body' cleaned.json)
+            PR_AUTHOR=$(jq -r '.author' cleaned.json)
+            echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+            echo "PR_BODY<<EOF" >> $GITHUB_ENV
+            cat cleaned.json | jq -r '.body' >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
 
       - name: ⚙️ PR 기반 릴리즈 노트 생성
         uses: softprops/action-gh-release@v2
