@@ -45,16 +45,12 @@ jobs:
           echo "Extracting artifact..."
           unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact
 
-      # Step 4: Proceed with deployment using PR information
-      - name: Deploy with PR Info
-        if: env.artifact_id != ''
+      - name: Read PR Info from Artifact
         run: |
-          PR_TITLE=$(jq -r '.title' ./artifact/pr-info.json)
-          PR_AUTHOR=$(jq -r '.author' ./artifact/pr-info.json)
+          PR_TITLE=$(jq -r '.title | gsub("[\u0000-\u001F]"; " ")' ./artifact/pr-info.json)
+          PR_BODY=$(jq -r '.body | gsub("[\u0000-\u001F]"; " ")' ./artifact/pr-info.json)
+          PR_AUTHOR=$(jq -r '.author | gsub("[\u0000-\u001F]"; " ")' ./artifact/pr-info.json)
 
           echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+          echo "PR_BODY=$PR_BODY" >> $GITHUB_ENV
           echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
-
-          echo "PR_BODY<<EOF" >> $GITHUB_ENV
-          jq -r '.body' ./artifact/pr-info.json >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
