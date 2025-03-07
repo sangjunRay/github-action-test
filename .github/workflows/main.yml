@@ -49,11 +49,12 @@ jobs:
       - name: Deploy with PR Info
         if: env.artifact_id != ''
         run: |
-          # Extract data from the extracted artifact (e.g., pr-info.json)
           PR_TITLE=$(jq -r '.title' ./artifact/pr-info.json)
-          PR_BODY=$(jq -r '.body' ./artifact/pr-info.json)
           PR_AUTHOR=$(jq -r '.author' ./artifact/pr-info.json)
 
-          echo "Deploying for PR: $PR_TITLE"
-          echo "PR Body: $PR_BODY"
-          echo "Author: $PR_AUTHOR"
+          echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+          echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
+
+          echo "PR_BODY<<EOF" >> $GITHUB_ENV
+          jq -r '.body' ./artifact/pr-info.json >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
