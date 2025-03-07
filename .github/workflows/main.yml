@@ -55,7 +55,7 @@ jobs:
 
       - name: Read PR Info from JSON
         run: |
-            PR_TITLE=$(jq -r '.title') ./artifact/pr-info.json)
+            PR_TITLE=$(jq -r '.title' ./artifact/pr-info.json)
             echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
 
       - name: Read PR Body from Artifact
