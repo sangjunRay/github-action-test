@@ -47,8 +47,8 @@ jobs:
 
       - name: Clean JSON file
         run: |
-          tr -d '\000-\031' < ./artifact/pr-info.json > cleaned.json
-          cat cleaned.json    
+            jq 'del(.body | select(type == "string" and test("[\\x00-\\x1F]"))) | .body = (.body | gsub("[\\x00-\\x1F]+"; ""))' ./artifact/pr-info.json > cleaned.json
+            cat cleaned.json    
 
 
       - name: Read PR Info from Cleaned JSON
