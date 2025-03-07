@@ -65,7 +65,8 @@ jobs:
       - name: ⚙️ PR 기반 릴리즈 노트 생성
         uses: softprops/action-gh-release@v2
         with:
-          name: Release
+          tag_name: release-${{ github.event.inputs.run_id }}
+          name: Release - ${{ github.event.inputs.run_id }}
           body: |
             # 🔥 릴리즈 노트
             ## ${{ env.PR_TITLE }}
