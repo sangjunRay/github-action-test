@@ -45,12 +45,19 @@ jobs:
           echo "Extracting artifact..."
           unzip pr-info-${{ github.event.inputs.run_id }}.zip -d ./artifact
 
-      - name: Read PR Info from Artifact
+      - name: Clean JSON file
         run: |
-          PR_TITLE=$(jq -r '.title | gsub("[\u0000-\u001F]"; " ")' ./artifact/pr-info.json)
-          PR_BODY=$(jq -r '.body | gsub("[\u0000-\u001F]"; " ")' ./artifact/pr-info.json)
-          PR_AUTHOR=$(jq -r '.author | gsub("[\u0000-\u001F]"; " ")' ./artifact/pr-info.json)
+          tr -d '\000-\031' < ./artifact/pr-info.json > cleaned.json
+          cat cleaned.json
 
+      - name: Read PR Info from Cleaned JSON
+        run: |
+          PR_TITLE=$(jq -r '.title' cleaned.json)
+          PR_BODY=$(jq -r '.body' cleaned.json)
+          PR_AUTHOR=$(jq -r '.author' cleaned.json)
+          
           echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
-          echo "PR_BODY=$PR_BODY" >> $GITHUB_ENV
+          echo "PR_BODY<<EOF" >> $GITHUB_ENV
+          echo "$PR_BODY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
           echo "PR_AUTHOR=$PR_AUTHOR" >> $GITHUB_ENV
