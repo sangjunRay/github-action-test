@@ -6,6 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="0f7aacda-cbbb-4b53-b117-6ccfd1afe804" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.github/workflows/gen_release_note.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/gen_release_note.yml" afterDir="false" />
+<<<<<<< Updated upstream
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+>>>>>>> Stashed changes
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,7 +157,11 @@
       <workItem from="1741250416870" duration="8000" />
       <workItem from="1741250437935" duration="12000" />
       <workItem from="1741250456143" duration="12546000" />
+<<<<<<< Updated upstream
       <workItem from="1742881915155" duration="300000" />
+=======
+      <workItem from="1742881915155" duration="844000" />
+>>>>>>> Stashed changes
     </task>
     <servers />
   </component>
