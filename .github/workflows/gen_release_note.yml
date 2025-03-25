@@ -4,18 +4,19 @@ on:
   pull_request:
     types:
       - closed
+
 permissions:
-  contents: write
-  
+  contents: write  # 🔥 릴리즈 생성 권한 추가!
+
 jobs:
   release-note:
-    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop' && startsWith(github.event.pull_request.head.ref, 'release-')
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main' && startsWith(github.event.pull_request.head.ref, 'release-')
     runs-on: ubuntu-latest
     steps:
       - name: 📥 레포지토리 체크아웃
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # 전체 커밋을 가져와야 함
 
       - name: 📝 커밋 로그 가져오기
         id: commit_log
@@ -42,31 +43,32 @@ jobs:
           done <<< "$COMMIT_LOG"
 
           # 릴리즈 노트 본문 생성
-          RELEASE_BODY="## 🔥 릴리즈 노트 ${{ github.event.pull_request.head.ref }}\n\n"
-          RELEASE_BODY+="### ${{ github.event.pull_request.title }}\n\n"
-          RELEASE_BODY+="${{ github.event.pull_request.body }}\n\n"
+          echo "## 🔥 릴리즈 노트 ${{ github.event.pull_request.head.ref }}" > release_body.md
+          echo "" >> release_body.md
+          echo "### ${{ github.event.pull_request.title }}" >> release_body.md
+          echo "" >> release_body.md
+          echo "${{ github.event.pull_request.body }}" >> release_body.md
+          echo "" >> release_body.md
 
           if [[ -n "$FEAT_LOG" ]]; then
-            RELEASE_BODY+="### 🚀 Features\n$FEAT_LOG\n\n"
+            echo "### 🚀 Features" >> release_body.md
+            echo -e "$FEAT_LOG\n" >> release_body.md
           fi
           if [[ -n "$FIX_LOG" ]]; then
-            RELEASE_BODY+="### 🛠 Fixes\n$FIX_LOG\n\n"
+            echo "### 🛠 Fixes" >> release_body.md
+            echo -e "$FIX_LOG\n" >> release_body.md
           fi
           if [[ -n "$CHORE_LOG" ]]; then
-            RELEASE_BODY+="### 🏗 ETC\n$CHORE_LOG\n\n"
+            echo "### 🏗 Chores" >> release_body.md
+            echo -e "$CHORE_LOG\n" >> release_body.md
           fi
-
-          echo "$RELEASE_BODY" > release_body.txt
-          echo "release_body<<EOF" >> $GITHUB_ENV
-          echo "$RELEASE_BODY" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
 
       - name: 🚀 PR 기반 릴리즈 노트 생성
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.pull_request.head.ref }}
           name: 앱 릴리즈 - ${{ github.event.pull_request.head.ref }}
-          body_path: release_body.txt
+          body_path: release_body.md  # 파일에서 직접 읽도록 변경!
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
