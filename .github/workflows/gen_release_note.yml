@@ -1,0 +1,70 @@
+name: 릴리즈 노트 생성
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  release-note:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'develop' && startsWith(github.event.pull_request.head.ref, 'release-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 레포지토리 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📝 커밋 로그 가져오기
+        id: commit_log
+        run: |
+          # 병합된 PR의 커밋 목록 가져오기
+          COMMIT_LOG=$(git log --pretty=format:"%H %s" ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+
+          # FEAT, FIX, CHORE로 분류
+          FEAT_LOG=""
+          FIX_LOG=""
+          CHORE_LOG=""
+
+          while IFS= read -r line; do
+            COMMIT_HASH=$(echo "$line" | awk '{print $1}')
+            COMMIT_MSG=$(echo "$line" | cut -d ' ' -f2-)
+
+            if [[ "$COMMIT_MSG" == feat:* ]]; then
+              FEAT_LOG+="\n- [${COMMIT_MSG#feat:}](https://github.com/${{ github.repository }}/commit/$COMMIT_HASH)"
+            elif [[ "$COMMIT_MSG" == fix:* ]]; then
+              FIX_LOG+="\n- [${COMMIT_MSG#fix:}](https://github.com/${{ github.repository }}/commit/$COMMIT_HASH)"
+            elif [[ "$COMMIT_MSG" == chore:* ]]; then
+              CHORE_LOG+="\n- [${COMMIT_MSG#chore:}](https://github.com/${{ github.repository }}/commit/$COMMIT_HASH)"
+            fi
+          done <<< "$COMMIT_LOG"
+
+          # 릴리즈 노트 본문 생성
+          RELEASE_BODY="## 🔥 릴리즈 노트 ${{ github.event.pull_request.head.ref }}\n\n"
+          RELEASE_BODY+="### ${{ github.event.pull_request.title }}\n\n"
+          RELEASE_BODY+="${{ github.event.pull_request.body }}\n\n"
+
+          if [[ -n "$FEAT_LOG" ]]; then
+            RELEASE_BODY+="### 🚀 Features\n$FEAT_LOG\n\n"
+          fi
+          if [[ -n "$FIX_LOG" ]]; then
+            RELEASE_BODY+="### 🛠 Fixes\n$FIX_LOG\n\n"
+          fi
+          if [[ -n "$CHORE_LOG" ]]; then
+            RELEASE_BODY+="### 🏗 Chores\n$CHORE_LOG\n\n"
+          fi
+
+          echo "$RELEASE_BODY" > release_body.md
+          echo "release_body<<EOF" >> $GITHUB_ENV
+          echo "$RELEASE_BODY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: 🚀 PR 기반 릴리즈 노트 생성
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.pull_request.head.ref }}
+          name: 앱 릴리즈 - ${{ github.event.pull_request.head.ref }}
+          body_path: release_body.md
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
