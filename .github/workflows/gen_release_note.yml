@@ -51,7 +51,7 @@ jobs:
             RELEASE_BODY+="### 🛠 Fixes\n$FIX_LOG\n\n"
           fi
           if [[ -n "$CHORE_LOG" ]]; then
-            RELEASE_BODY+="### 🏗 Chores\n$CHORE_LOG\n\n"
+            RELEASE_BODY+="### 🏗 ETC\n$CHORE_LOG\n\n"
           fi
 
           echo "$RELEASE_BODY" > release_body.md
